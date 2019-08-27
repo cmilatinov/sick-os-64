@@ -30,7 +30,7 @@
             "compilerPath": "C:/cygwin64/bin/gcc.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x86",
+            "intelliSenseMode": "gcc-x64",
             "browse": {
                 "limitSymbolsToIncludedHeaders": true
             }

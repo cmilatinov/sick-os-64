@@ -4,11 +4,11 @@ SRC = src
 
 CC=gcc
 SHARED_FLAGS = -fno-builtin  -nostdinc -nostdlib -ffreestanding -g -Wall -Wextra \
-            -I$(INCLUDE) -MMD -mno-red-zone -mcmodel=kernel -fno-pie -fno-permissive -fno-exceptions -fno-rtti
+            -O2 -I$(INCLUDE) -MMD -mno-red-zone -mcmodel=kernel -fno-pie -fno-permissive -fno-exceptions -fno-rtti
 CFLAGS = $(SHARED_FLAGS)
 ASFLAGS = $(SHARED_FLAGS) -Wa,--divide
 
-_OBJS = boot.o kernel.o
+_OBJS = boot.o kernel.o lib.o gdt.o ports.o interrupts.o interruptstubs.o keyboard.o
 
 OBJS = $(patsubst %, $(BUILD)/%, $(_OBJS))
 
@@ -35,7 +35,7 @@ kernel.iso: kernel.bin
 	rm -rf iso
 
 run: kernel.iso
-	qemu-system-x86_64 -cdrom $< -serial stdio -m 1024M
+	qemu-system-x86_64 -no-reboot -no-shutdown -cdrom $< -serial stdio -m 1024M -d int -s
 
 clean: 
 	rm -rf build

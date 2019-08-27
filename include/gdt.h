@@ -1,4 +1,5 @@
 #include "types.h"
+#include "arch/x84_64/gdt.h"
 
 #pragma once
 
@@ -27,7 +28,7 @@ class GDT {
         uint8_t hBase;
 
         public:
-        SegmentDescriptor(uint32_t base, uint32_t limit, uint8_t flags);
+        SegmentDescriptor(uint32_t base, uint32_t limit, uint8_t access);
         ~SegmentDescriptor();
 
         // Getters.

@@ -52,8 +52,9 @@
 
 gdt_start:
 
-    .quad GDT_FIRST_ENTRY      // Unused / Invalid Entry
-    .quad GDT_KERNEL_ENTRY     // Kernel Entry
+    .quad GDT_FIRST_ENTRY           // Unused / Invalid Entry
+    .quad GDT_KERNEL_ENTRY_CODE     // Kernel Entry
+    .quad GDT_KERNEL_ENTRY_DATA
 
 gdt_end:
 
@@ -157,8 +158,8 @@ page_directory_table_loop:
 
 _start64:
 
-    // Set segment selectors to 0.
-    xor %ax, %ax
+    // Set segment selectors to the kernel descriptor.
+    mov $0x10, %ax
     movw %ax, %ds
     movw %ax, %es
     movw %ax, %fs

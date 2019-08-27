@@ -43,12 +43,18 @@ SECTIONS
     .rodata : AT ( (LOADADDR (.text) + SIZEOF (.text) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
     {
         *(.rodata)
+        *(.rodata.*)
     }
 
     . = ALIGN(0x1000);
 
     .data : AT ( (LOADADDR (.rodata) + SIZEOF (.rodata) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
     {
+        start_ctors = .;
+        KEEP(*(.init_array));
+        KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
+        end_ctors = .;
+
         *(.data)
     }
 
@@ -58,6 +64,12 @@ SECTIONS
     {
         *(COMMON)
         *(.bss)
+    }
+
+    /DISCARD/ :
+    {
+        *(.fini_array*)
+        *(.comment)
     }
 
     _kernel_virtual_end = .;

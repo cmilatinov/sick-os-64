@@ -1,7 +1,7 @@
 #include "lib.h"
 
 static uint16_t * const VIDEO_MEMORY = (uint16_t *) 0xb8000;
-static const char * symbols = "0123456789abcdef";
+static const char * const symbols = "0123456789abcdef";
 static uint32_t x = 0, y = 0;
 
 void clear(){
@@ -42,7 +42,14 @@ void printf(const char * str){
 
 }
 
+void printf(){
+	return printf("\n");
+}
+
 void printb(uint64_t integer, uint8_t base){
+
+	// Print zero if the integer is a zero.
+	if(integer == 0) return printf("0");
 
 	// 50 characters should be more than enough.
 	char str[50];
@@ -71,7 +78,14 @@ void printb(uint64_t integer, uint8_t base){
 	printf(str);
 }
 
-void printi(uint64_t integer){
+void printb(uint64_t binary){
+
+	// Prepend '0x' and print the integer in base 16.
+	printf("0b");
+	printb(binary, 2);
+}
+
+void printd(uint64_t integer){
 
 	// Print the integer in base 10.
 	printb(integer, 10);
