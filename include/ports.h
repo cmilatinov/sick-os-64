@@ -3,43 +3,43 @@
 // Port communication
 #pragma once
 
-// class Port8S {
+class Port8S {
 
-//     private:
-//     // Port number
-//     uint16_t port;
+    private:
+    // Port number
+    uint16_t port;
 
-//     public:
-//     Port8S(uint16_t port);
-//     ~Port8S();
+    public:
+    Port8S(uint16_t port);
+    ~Port8S();
 
-//     uint8_t Read();
-//     void Write(uint8_t data);
+    uint8_t Read();
+    void Write(uint8_t data);
 
-//     static inline uint8_t Read(uint16_t port){
-//         uint8_t result;
-//         asm volatile(
-//             "inb %1, %0\n"
-//             "1: jmp 1f\n"
-//             "1: jmp 1f\n"
-//             "1:"
-//             : "=a"(result) 
-//             : "Nd"(port));
-//         return result;
-//     }
+    static inline uint8_t Read(uint16_t port){
+        uint8_t result;
+        asm volatile(
+            "inb %1, %0\n"
+            "1: jmp 1f\n"
+            "1: jmp 1f\n"
+            "1:"
+            : "=a"(result) 
+            : "Nd"(port));
+        return result;
+    }
 
-//     static inline void Write(uint16_t port, uint8_t data){
-//         asm volatile( 
-//             "outb %0, %1\n"
-//             "1: jmp 1f\n"
-//             "1: jmp 1f\n"
-//             "1:"
-//             :
-//             : "a" (data), "Nd"(port)
-//         );
-//     }
+    static inline void Write(uint16_t port, uint8_t data){
+        asm volatile( 
+            "outb %0, %1\n"
+            "1: jmp 1f\n"
+            "1: jmp 1f\n"
+            "1:"
+            :
+            : "a" (data), "Nd"(port)
+        );
+    }
 
-// };
+};
 
 class Port8 {
 

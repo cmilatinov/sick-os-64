@@ -27,6 +27,7 @@
 #define PIC2_COMMAND_PORT 0xA0
 #define PIC2_DATA_PORT 0xA1
 
+#define IRQ_OFFSET_X86_64 0x20
 
 // Interrupt Descriptor Table Class
 class IDT {
@@ -99,7 +100,30 @@ extern "C" uint64_t HandleInterrupt(uint64_t rsp, uint8_t interruptNumber);
 extern "C" void IgnoreInterrupt();
 
 // Interrupt Requests
-extern "C" void HandleInterruptRequest0x16(); // for IRQs but this is temporary
+extern "C" void HandleInterruptRequest0x00(); // Timer
+extern "C" void HandleInterruptRequest0x01(); // Keyboard
+
+// Exceptions
+extern "C" void HandleException0x00();
+extern "C" void HandleException0x01();
+extern "C" void HandleException0x02();
+extern "C" void HandleException0x03();
+extern "C" void HandleException0x04();
+extern "C" void HandleException0x05();
+extern "C" void HandleException0x06();
+extern "C" void HandleException0x07();
+extern "C" void HandleException0x08();
+extern "C" void HandleException0x09();
+extern "C" void HandleException0x0A();
+extern "C" void HandleException0x0B();
+extern "C" void HandleException0x0C();
+extern "C" void HandleException0x0D();
+extern "C" void HandleException0x0E();
+extern "C" void HandleException0x0F();
+extern "C" void HandleException0x10();
+extern "C" void HandleException0x11();
+extern "C" void HandleException0x12();
+extern "C" void HandleException0x13();
 
 // Interrupt Manager class
 class InterruptManager {
@@ -117,10 +141,10 @@ class InterruptManager {
     InterruptHandler * handlers[IDT_SIZE];
 
     // Programmable Interrupt Controller Ports
-    Port8 picMasterCommandPort;
-    Port8 picMasterDataPort;
-    Port8 picSlaveCommandPort;
-    Port8 picSlaveDataPort;
+    Port8S picMasterCommandPort;
+    Port8S picMasterDataPort;
+    Port8S picSlaveCommandPort;
+    Port8S picSlaveDataPort;
 
     // IRQ Interrupts Offset
     uint64_t hardwareInterruptOffset;

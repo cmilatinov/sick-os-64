@@ -1,9 +1,9 @@
 #include "ports.h"
 
 // Constructors
-// Port8S::Port8S(uint16_t port){
-//     this->port = port;
-// }
+Port8S::Port8S(uint16_t port){
+    this->port = port;
+}
 Port8::Port8(uint16_t port){
     this->port = port;
 }
@@ -15,18 +15,18 @@ Port32::Port32(uint16_t port){
 }
 
 // Destructors
-// Port8S::~Port8S(){}
+Port8S::~Port8S(){}
 Port8::~Port8(){}
 Port16::~Port16(){}
 Port32::~Port32(){}
 
-// uint8_t Port8S::Read(){
-//     return Read(port);
-// }
+uint8_t Port8S::Read(){
+    return Read(port);
+}
 
-// void Port8S::Write(uint8_t data){
-//     Write(port, data);
-// }
+void Port8S::Write(uint8_t data){
+    Write(port, data);
+}
 
 uint8_t Port8::Read(){
     return Read(port);

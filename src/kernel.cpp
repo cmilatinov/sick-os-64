@@ -4,6 +4,16 @@
 #include "interrupts.h"
 #include "keyboard.h"
 
+class HandleKeyboard: public KeyboardEventHander {
+
+	public:
+	void KeyDown(char c, uint8_t keycode, uint8_t mods){
+		printh(keycode);
+	}
+	void KeyUp(char c, uint8_t keycode){}
+
+};
+
 extern "C" void kernelMain(void * gdtPtr, uint64_t gdtSize){
 
 	clear();
@@ -11,13 +21,16 @@ extern "C" void kernelMain(void * gdtPtr, uint64_t gdtSize){
 	GDT _gdt(gdtPtr, KERNEL_GDT_ENTRY, gdtSize);
 	GDT * gdt = &_gdt;
 
-	InterruptManager iManager(0x20);
-	KeyboardDriver kb(NULL);
-	
+	InterruptManager iManager(IRQ_OFFSET_X86_64);
+
+	HandleKeyboard hk;
+	KeyboardDriver kb(&hk);
 	iManager.SetInterruptHandler(0x21, &kb);
-	iManager.Activate();
+
 	kb.Activate();
-	
+	iManager.Activate();
+
+
 	printf("=========================== This is a 64-bit SickOS! ===========================");
 	printf();
 
@@ -62,5 +75,6 @@ extern "C" void kernelMain(void * gdtPtr, uint64_t gdtSize){
 	printh(value);
 	printf("\n\n");
 
+	while(1);
 
 }

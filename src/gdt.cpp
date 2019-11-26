@@ -1,10 +1,7 @@
 #include "gdt.h"
 
 GDT::SegmentDescriptor::SegmentDescriptor(uint32_t base, uint32_t limit, uint8_t access){
-
-    // Byte pointer to segment descriptor.
-    uint8_t * ptr = reinterpret_cast<uint8_t *>(this);
-
+    
     // Use 32-bit address space for limit.
     // 12 least significant bits are implicitly set to 1.
     this->hLimit = GDT_FLAG_FOUR_KILOBYTE_GRANULARITY | GDT_FLAG_64BIT_MODE;

@@ -4,7 +4,7 @@ SRC = src
 
 CC=gcc
 SHARED_FLAGS = -fno-builtin  -nostdinc -nostdlib -ffreestanding -g -Wall -Wextra \
-            -O2 -I$(INCLUDE) -MMD -mno-red-zone -mcmodel=kernel -fno-pie -fno-permissive -fno-exceptions -fno-rtti
+            -O3 -I$(INCLUDE) -MMD -mno-red-zone -mcmodel=kernel -fno-pie -fno-permissive -fno-exceptions -fno-rtti
 CFLAGS = $(SHARED_FLAGS)
 ASFLAGS = $(SHARED_FLAGS) -Wa,--divide
 
@@ -28,15 +28,20 @@ kernel.iso: kernel.bin
 	echo set default=0 							>> iso/boot/grub/grub.cfg
 	echo 										>> iso/boot/grub/grub.cfg
 	echo 'menuentry "SickOS" {' 				>> iso/boot/grub/grub.cfg
-	echo "    multiboot /boot/$(notdir $<)" 	>> iso/boot/grub/grub.cfg
+	echo "    multiboot /boot/$<" 				>> iso/boot/grub/grub.cfg
 	echo "    boot" 							>> iso/boot/grub/grub.cfg
 	echo } 										>> iso/boot/grub/grub.cfg
 	bash -c "grub-mkrescue --output=$@ iso"
 	rm -rf iso
 
-run: kernel.iso
-	qemu-system-x86_64 -no-reboot -no-shutdown -cdrom $< -serial stdio -m 1024M -d int -s
+.PHONY: all
+all: kernel.iso ;
 
+.PHONY: run
+run: clean kernel.iso
+	qemu-system-x86_64 -cdrom $(word 2, $^) -serial stdio -m 1024M
+
+.PHONY: clean
 clean: 
 	rm -rf build
 	rm -f kernel.iso

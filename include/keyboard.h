@@ -1,5 +1,6 @@
 #include "ports.h"
 #include "interrupts.h"
+#include "keys.h"
 
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_COMMAND_PORT 0x64
@@ -11,8 +12,8 @@ class KeyboardEventHander {
     KeyboardEventHander();
     ~KeyboardEventHander();
 
-    virtual void KeyDown(char);
-    virtual void KeyUp(char);
+    virtual void KeyDown(char c, uint8_t keycode, uint8_t modifiers);
+    virtual void KeyUp(char c, uint8_t keycode);
 
 };
 

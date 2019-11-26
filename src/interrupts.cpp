@@ -90,8 +90,29 @@ InterruptManager::InterruptManager(uint64_t hardwareInterruptOffset) :
         this->handlers[i] = NULL;
     }
 
-    // I get a single interrupt 0x16 before the exception is issued resulting in a triple fault.
-    idt.SetEntry(0x16, &HandleInterruptRequest0x16, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x00, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x01, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x02, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x03, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x04, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x05, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x06, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x07, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x08, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x09, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x0A, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x0B, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x0C, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x0D, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x0E, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x0F, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x10, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x11, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x12, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(0x16, &HandleException0x13, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+
+    idt.SetEntry(hardwareInterruptOffset, &HandleInterruptRequest0x00, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(hardwareInterruptOffset + 0x01, &HandleInterruptRequest0x01, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
 
     // Restart PICs.
     picMasterCommandPort.Write(0x11);
@@ -145,19 +166,13 @@ extern "C" uint64_t HandleInterrupt(uint64_t rsp, uint8_t interruptNumber){
 
 uint64_t InterruptManager::HandleInterrupt(uint64_t rsp, uint8_t interruptNumber){
 
-    // Print interrupt.
-    printf("INTERRUPT\n");
-    printh(interruptNumber);
-    printf();
-    printh(rsp);
-    printf();
-
     // If this interrupt has a handler, handle it.
-    if(handlers[interruptNumber] != NULL)
+    if(handlers[interruptNumber] != NULL){
         rsp = handlers[interruptNumber]->HandleInterrupt(rsp);
+    }
 
     // Acknowledge hardware interrupts.
-    if(hardwareInterruptOffset <= interruptNumber && interruptNumber < hardwareInterruptOffset + 16){
+    if(interruptNumber >= hardwareInterruptOffset && interruptNumber < hardwareInterruptOffset + 0x10){
         picMasterCommandPort.Write(0x20);
         
         if(hardwareInterruptOffset + 8 <= interruptNumber)
