@@ -1,18 +1,33 @@
-#include "lib.h"
+#include "utils/lib.h"
 
-#include "gdt.h"
-#include "interrupts.h"
-#include "keyboard.h"
+#include "hardware/gdt.h"
+#include "hardware/interrupts.h"
+#include "drivers/keyboard.h"
+#include "drivers/mouse.h"
+#include "utils/keys.h"
 
-class HandleKeyboard: public KeyboardEventHander {
+void onKeyDown(char c, uint8_t keycode, uint8_t mods) {
+	if(!(mods & MOD_CTRL || mods & MOD_ALT))
+		printc(c);
+}
 
-	public:
-	void KeyDown(char c, uint8_t keycode, uint8_t mods){
-		printh(keycode);
-	}
-	void KeyUp(char c, uint8_t keycode){}
+void onMouseDown(uint8_t button){
+	printf(" DOWN ");
+	printh(button);
+}
 
-};
+void onMouseUp(uint8_t button){
+	printf(" UP ");
+	printh(button);
+}
+
+void onMouseMove(uint32_t dx, uint32_t dy) {
+	printf(" MOVE ( ");
+	printh(dx);
+	printf(" ");
+	printh(~dy + 1);
+	printf(" )");
+}
 
 extern "C" void kernelMain(void * gdtPtr, uint64_t gdtSize){
 
@@ -23,11 +38,19 @@ extern "C" void kernelMain(void * gdtPtr, uint64_t gdtSize){
 
 	InterruptManager iManager(IRQ_OFFSET_X86_64);
 
-	HandleKeyboard hk;
-	KeyboardDriver kb(&hk);
+	KeyboardDriver kb;
+	MouseDriver mb;
+	kb.OnKeyDown(onKeyDown);
+	mb.OnMouseButtonDown(onMouseDown);
+	mb.OnMouseButtonUp(onMouseUp);
+	mb.OnMouseMove(onMouseMove);
+
 	iManager.SetInterruptHandler(0x21, &kb);
+	iManager.SetInterruptHandler(0x2C, &mb);
 
 	kb.Activate();
+	mb.Activate();
+	
 	iManager.Activate();
 
 
