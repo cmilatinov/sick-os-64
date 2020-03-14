@@ -1,9 +1,9 @@
+#pragma once
+
 #include "arch/x84_64/kernel.h"
-#include "utils/types.h"
+#include "common/types.h"
 #include "hardware/ports.h"
 #include "hardware/gdt.h"
-
-#pragma once
 
 #define IDT_ENTRY_SIZE 16
 #define IDT_SIZE 256
@@ -89,7 +89,7 @@ class InterruptHandler {
     InterruptHandler();
     ~InterruptHandler();
     
-    virtual uint64_t HandleInterrupt(uint64_t rsp);
+    virtual uint64_t HandleInterrupt(uint64_t rsp) = 0;
 
 };
 

@@ -1,6 +1,8 @@
+#pragma once
+
 #include "hardware/ports.h"
 #include "hardware/interrupts.h"
-#include "utils/keys.h"
+#include "common/keycodes.h"
 
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_COMMAND_PORT 0x64
@@ -19,7 +21,7 @@ class KeyboardDriver : public InterruptHandler {
     KeyboardDriver();
     ~KeyboardDriver();
 
-    virtual uint64_t HandleInterrupt(uint64_t rsp);
+    virtual uint64_t HandleInterrupt(uint64_t rsp) final;
     void Activate();
 
     void OnKeyDown(void (*keyDown)(char, uint8_t, uint8_t));

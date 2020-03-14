@@ -1,12 +1,10 @@
-#include "utils/types.h"
-
-// Port communication
 #pragma once
+
+#include "common/types.h"
 
 class Port8S {
 
     private:
-    // Port number
     uint16_t port;
 
     public:
@@ -44,7 +42,6 @@ class Port8S {
 class Port8 {
 
     private:
-    // Port number
     uint16_t port;
 
     public:
@@ -76,7 +73,6 @@ class Port8 {
 class Port16 {
 
     private:
-    // Port number
     uint16_t port;
 
     public:
@@ -108,7 +104,6 @@ class Port16 {
 class Port32 {
 
     private:
-    // Port number
     uint16_t port;
 
     public:

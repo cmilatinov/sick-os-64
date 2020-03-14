@@ -159,7 +159,7 @@ page_directory_table_loop:
 _start64:
 
     // Set segment selectors to the kernel descriptor.
-    mov $0x10, %ax
+    mov $0, %ax
     movw %ax, %ds
     movw %ax, %es
     movw %ax, %fs

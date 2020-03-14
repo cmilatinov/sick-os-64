@@ -1,5 +1,4 @@
 #include "drivers/mouse.h"
-#include "utils/lib.h"
 
 MouseDriver::MouseDriver(): 
     data(MOUSE_DATA_PORT),

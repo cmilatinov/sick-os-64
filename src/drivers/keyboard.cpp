@@ -1,5 +1,5 @@
 #include "drivers/keyboard.h"
-#include "utils/lib.h"
+#include "modules/lib.h"
 
 KeyboardDriver::KeyboardDriver(): 
     data(KEYBOARD_DATA_PORT),
@@ -131,8 +131,6 @@ uint64_t KeyboardDriver::HandleInterrupt(uint64_t rsp) {
             case SC_PERIOD: handler(shift ? '>' : '.', VK_PERIOD, mods); break;
             case SC_SLASH: handler(shift ? '?' : '/', VK_SLASH, mods); break;
 
-            //default: printh(key);
-
         }
         escape = 0;
     }
@@ -164,6 +162,10 @@ void KeyboardDriver::Activate() {
 
     // Write the command byte to data port
     data.Write(status); 
+
+    uint64_t rsp;
+    asm volatile("movq %%rsp, %0" : "=r"(rsp));
+    printh(rsp);
 
 }
 

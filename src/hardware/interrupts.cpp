@@ -1,5 +1,5 @@
 #include "hardware/interrupts.h"
-#include "utils/lib.h"
+#include "modules/lib.h"
 
 IDT::GateDescriptor::GateDescriptor(){
 
@@ -69,9 +69,6 @@ void IDT::LoadIDT(){
 InterruptHandler::InterruptHandler(){}
 InterruptHandler::~InterruptHandler(){}
 
-uint64_t InterruptHandler::HandleInterrupt(uint64_t rsp){
-    return rsp;
-}
 
 InterruptManager * InterruptManager::activeManager = 0;
 

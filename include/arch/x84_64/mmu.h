@@ -1,7 +1,7 @@
-#include "kernel.h"
-
 // Memory Management Unit values.
 #pragma once
+
+#include "kernel.h"
 
 // Page Map Level 4
 #define PML4_SIZE 0x1000

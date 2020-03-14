@@ -14,13 +14,14 @@ BINFLAGS = $(SHARED_FLAGS) -z max-page-size=0x1000 -no-pie -Wl,--build-id=none
 
 _OBJS = boot/boot.o 				\
 		kernel.o 					\
-		utils/lib.o 				\
+		common/virtual.o 			\
+		modules/lib.o 				\
 		hardware/gdt.o 				\
 		hardware/ports.o 			\
 		hardware/interrupts.o 		\
 		hardware/interruptstubs.o 	\
 		drivers/keyboard.o			\
-		drivers/mouse.o
+		drivers/mouse.o				
 
 LINK_OBJS = $(notdir $(_OBJS))
 OBJS = $(patsubst %, $(BUILD)/%, $(_OBJS))

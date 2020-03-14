@@ -1,7 +1,7 @@
-#include "arch/x84_64/gdt.h"
-#include "utils/types.h"
-
 #pragma once
+
+#include "arch/x84_64/gdt.h"
+#include "common/types.h"
 
 class GDT {
 

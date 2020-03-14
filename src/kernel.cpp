@@ -1,10 +1,12 @@
-#include "utils/lib.h"
+#include "modules/lib.h"
 
 #include "hardware/gdt.h"
 #include "hardware/interrupts.h"
+
 #include "drivers/keyboard.h"
 #include "drivers/mouse.h"
-#include "utils/keys.h"
+
+#include "common/keycodes.h"
 
 void onKeyDown(char c, uint8_t keycode, uint8_t mods) {
 	if(!(mods & MOD_CTRL || mods & MOD_ALT))
@@ -97,6 +99,7 @@ extern "C" void kernelMain(void * gdtPtr, uint64_t gdtSize){
 	printf("RIP - ");
 	printh(value);
 	printf("\n\n");
+
 
 	while(1);
 

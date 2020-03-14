@@ -1,7 +1,7 @@
-#include "cr.h"
-
 // Kernel related values.
 #pragma once
+
+#include "cr.h"
 
 // Physical and virtual memory stack pointers.
 #define KERNEL_PHYSICAL_START 0x0000000000400000
