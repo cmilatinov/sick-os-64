@@ -34,7 +34,7 @@ class MouseDriver : public InterruptHandler {
 
     void (*mouseButtonDown) (uint8_t button);
     void (*mouseButtonUp) (uint8_t button);
-    void (*mouseMove) (uint32_t dx, uint32_t dy);
+    void (*mouseMove) (int32_t dx, int32_t dy);
 
     public:
     MouseDriver();
@@ -45,6 +45,6 @@ class MouseDriver : public InterruptHandler {
 
     void OnMouseButtonDown(void (*mouseButtonDown) (uint8_t button));
     void OnMouseButtonUp(void (*mouseButtonUp) (uint8_t button));
-    void OnMouseMove(void (*mouseMove) (uint32_t dx, uint32_t dy));
+    void OnMouseMove(void (*mouseMove) (int32_t dx, int32_t dy));
 
 };

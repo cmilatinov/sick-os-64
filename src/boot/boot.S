@@ -13,8 +13,6 @@
 // Extra Definitions
 #define TWO_MEGABYTES_SHIFT 21
 #define TWO_MEGABYTES (1 << TWO_MEGABYTES_SHIFT)
-#define KERNEL_BOOT_STACK_SIZE 0x4000
-#define KERNEL_BOOT_STACK_ALIGNMENT 0x1000
 
 // Multiboot Variables
 .set MAGIC, 0x1badb002
@@ -77,6 +75,10 @@ _start:
     // Set Stack Pointer to point to the end of the stack as the stack grows downwards.
     movl $tmp_stack + KERNEL_BOOT_STACK_SIZE, %esp
 
+    // Put multiboot structure pointer on the stack
+    push $0
+    push %ebx
+
     // PML4 entry for Low PDPT
     movl $low_pdpt, %eax                                                                        // Pointer to Low PDPT
     or $(MMU_PRESENT | MMU_WRITABLE), %eax                                                      // Set Page Present and Writable Flags
@@ -101,7 +103,7 @@ _start:
     xor %ecx, %ecx
     
     // Load physical kernel end address and divide it by 2MB (the page size).
-    movl $_kernel_physical_end, %esi
+    movl $(_kernel_physical_end + KERNEL_HEAP_SIZE), %esi
     shrl $TWO_MEGABYTES_SHIFT, %esi
     addl $1, %esi
 
@@ -166,9 +168,10 @@ _start64:
     movw %ax, %gs
     movw %ax, %ss
 
-    // Pass the GDT pointer and size to C++ entry point.
-    movq $gdt_start, %rdi
-    movq $GDT_SIZE, %rsi
+    // Pass multiboot pointer to C++ entry point.
+    movq $_kernel_virtual_end, %rdi
+    addq $0xFFF, %rdi
+    andq $0xFFFFFFFFFFFFF000, %rdi
 
     // Call C++ entry point.
     call kernelMain

@@ -20,3 +20,8 @@
 
 // Control register 4 value.
 #define KERNEL_CR4 (CR4_PAE_ENABLE)     // PAE Enables PSE by default and sets the page size to 2MB
+
+// Kernel stack and heap
+#define KERNEL_BOOT_STACK_SIZE 0x4000
+#define KERNEL_BOOT_STACK_ALIGNMENT 0x1000
+#define KERNEL_HEAP_SIZE 1 << 24

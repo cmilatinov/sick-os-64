@@ -81,5 +81,5 @@ GDT::SegmentDescriptor * GDT::GetEntry(uint16_t index){
     if(index < numEntries)
         return table + index;
     
-    return NULL;
+    return nullptr;
 }

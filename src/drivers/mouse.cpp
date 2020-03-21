@@ -97,6 +97,6 @@ void MouseDriver::OnMouseButtonUp(void (*mouseButtonUp) (uint8_t button)) {
     this->mouseButtonUp = mouseButtonUp;
 }
 
-void MouseDriver::OnMouseMove(void (*mouseMove) (uint32_t dx, uint32_t dy)) {
+void MouseDriver::OnMouseMove(void (*mouseMove) (int32_t dx, int32_t dy)) {
     this->mouseMove = mouseMove;
 }

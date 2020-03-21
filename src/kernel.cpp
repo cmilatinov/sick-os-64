@@ -1,51 +1,32 @@
-#include "modules/lib.h"
-
-#include "hardware/gdt.h"
 #include "hardware/interrupts.h"
 
 #include "drivers/keyboard.h"
 #include "drivers/mouse.h"
+#include "drivers/vga.h"
+
+#include "modules/lib.h"
+#include "modules/memory.h"
 
 #include "common/keycodes.h"
 
-void onKeyDown(char c, uint8_t keycode, uint8_t mods) {
-	if(!(mods & MOD_CTRL || mods & MOD_ALT))
-		printc(c);
-}
-
-void onMouseDown(uint8_t button){
-	printf(" DOWN ");
-	printh(button);
-}
-
-void onMouseUp(uint8_t button){
-	printf(" UP ");
-	printh(button);
-}
-
-void onMouseMove(uint32_t dx, uint32_t dy) {
-	printf(" MOVE ( ");
-	printh(dx);
-	printf(" ");
-	printh(~dy + 1);
-	printf(" )");
-}
-
-extern "C" void kernelMain(void * gdtPtr, uint64_t gdtSize){
+extern "C" void kernelMain(void * heapStart){
 
 	clear();
 
-	GDT _gdt(gdtPtr, KERNEL_GDT_ENTRY, gdtSize);
-	GDT * gdt = &_gdt;
+	void * heapEnd = reinterpret_cast<uint8_t*>(heapStart) + (1 << 24);
+	MemoryManager memManager(heapStart, heapEnd);
 
 	InterruptManager iManager(IRQ_OFFSET_X86_64);
-
 	KeyboardDriver kb;
 	MouseDriver mb;
-	kb.OnKeyDown(onKeyDown);
-	mb.OnMouseButtonDown(onMouseDown);
-	mb.OnMouseButtonUp(onMouseUp);
-	mb.OnMouseMove(onMouseMove);
+	VGADriver vga;
+
+	// kb.OnKeyDown(onKeyDown);
+	// kb.OnKeyUp(onKeyUp);
+
+	// mb.OnMouseButtonDown(onMouseDown);
+	// mb.OnMouseButtonUp(onMouseUp);
+	// mb.OnMouseMove(onMouseMove);
 
 	iManager.SetInterruptHandler(0x21, &kb);
 	iManager.SetInterruptHandler(0x2C, &mb);
@@ -55,52 +36,26 @@ extern "C" void kernelMain(void * gdtPtr, uint64_t gdtSize){
 	
 	iManager.Activate();
 
+	vga.SetGraphicsMode(VGA_MODE_320_200_256);
 
-	printf("=========================== This is a 64-bit SickOS! ===========================");
-	printf();
+	uint8_t * VRAM = reinterpret_cast<uint8_t*>(0xA0000);
+	uint32_t x = 500, c = 0;	
 
-	uint64_t value;
-	asm volatile("movq %%rbp, %0" : "=r"(value));
+	while(1) {
+		vga.Clear();
 
-	printf("GDT Size - ");
-	printh(gdtSize);
-	printf("\n\n");
+		vga.SetColor(COLOR_LIGHT_GREEN);
+		for(uint16_t i = 0; i < 320; i += 5)
+			for(uint8_t j = 0; j < 25; j += 5)
+				vga.PutPixel(i, j);
 
-	printf("GDT Pointer - ");
-	printp(gdtPtr);
-	printf("\n\n");
+		//vga.FillRect(0, 0, x, 1);
 
-	uint8_t reg[10];
-	uint16_t * ptr = (uint16_t*)reg;
-	asm volatile("sgdt %0" : "=rm"(reg));
+		// c = (c + 1) % 10;
+		// if(c == 0)
+		// 	x = (x + 1) % 8000;
 
-	printf("GDT Size - ");
-	printh(ptr[0]);
-	printf("\n\n");
-
-	printf("GDT Pointer - ");
-	printh(*reinterpret_cast<uint64_t*>(&reinterpret_cast<uint16_t*>(reg)[1]));
-	printf("\n\n");
-
-	printf("RBP - ");
-	printh(value);
-	printf("\n\n");
-
-	asm volatile("movq %%rsp, %0" : "=r"(value));
-
-	printf("RSP - ");
-	printh(value);
-	printf("\n\n");
-
-	asm volatile(
-		"lea 0(%%rip), %%rax"
-		: "=a"(value));
-
-	printf("RIP - ");
-	printh(value);
-	printf("\n\n");
-
-
-	while(1);
+		vga.Draw();
+	}
 
 }

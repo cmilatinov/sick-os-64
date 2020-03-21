@@ -163,10 +163,6 @@ void KeyboardDriver::Activate() {
     // Write the command byte to data port
     data.Write(status); 
 
-    uint64_t rsp;
-    asm volatile("movq %%rsp, %0" : "=r"(rsp));
-    printh(rsp);
-
 }
 
 void KeyboardDriver::OnKeyDown(void (*keyDown) (char, uint8_t, uint8_t)) {

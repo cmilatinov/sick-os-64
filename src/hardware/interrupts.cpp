@@ -84,7 +84,7 @@ InterruptManager::InterruptManager(uint64_t hardwareInterruptOffset) :
 
     for(uint32_t i = 0; i < IDT_SIZE; i++){
         idt.SetEntry(i, &IgnoreInterrupt, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
-        this->handlers[i] = NULL;
+        this->handlers[i] = nullptr;
     }
 
     idt.SetEntry(0x00, &HandleException0x00, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
@@ -142,7 +142,7 @@ InterruptManager::~InterruptManager(){
 }
 
 void InterruptManager::Activate(){
-    if(activeManager != NULL)
+    if(activeManager != nullptr)
         activeManager->Deactivate();
     
     activeManager = this;
@@ -151,7 +151,7 @@ void InterruptManager::Activate(){
 
 void InterruptManager::Deactivate(){
     if(activeManager == this){
-        activeManager = NULL;
+        activeManager = nullptr;
         asm("cli");
     }
 }
@@ -162,7 +162,7 @@ void InterruptManager::SetInterruptHandler(uint8_t interruptNumber, InterruptHan
 
 // Single Interrupt Handler
 extern "C" uint64_t HandleInterrupt(uint64_t rsp, uint8_t interruptNumber){
-    if(InterruptManager::activeManager != NULL)
+    if(InterruptManager::activeManager != nullptr)
         return InterruptManager::activeManager->HandleInterrupt(rsp, interruptNumber);
     return rsp;
 }
@@ -170,7 +170,7 @@ extern "C" uint64_t HandleInterrupt(uint64_t rsp, uint8_t interruptNumber){
 uint64_t InterruptManager::HandleInterrupt(uint64_t rsp, uint8_t interruptNumber){
 
     // If this interrupt has a handler, handle it.
-    if(handlers[interruptNumber] != NULL){
+    if(handlers[interruptNumber] != nullptr){
         rsp = handlers[interruptNumber]->HandleInterrupt(rsp);
     }
 

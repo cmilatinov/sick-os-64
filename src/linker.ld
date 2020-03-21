@@ -44,6 +44,7 @@ SECTIONS
     {
         *(.rodata)
         *(.rodata.*)
+
     }
 
     . = ALIGN(0x1000);
@@ -56,6 +57,8 @@ SECTIONS
         end_ctors = .;
 
         *(.data)
+        *(.eh_frame_hdr)
+        *(.eh_frame)
     }
 
     . = ALIGN(0x1000);

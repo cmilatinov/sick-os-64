@@ -14,6 +14,8 @@ typedef unsigned int uint32_t;
 typedef long long int int64_t;
 typedef unsigned long long int uint64_t;
 
+typedef uint64_t size_t;
+
 #define NULL 0
 
 #define UINT8_MAX 0xff

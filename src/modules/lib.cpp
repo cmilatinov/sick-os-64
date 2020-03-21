@@ -1,7 +1,7 @@
 #include "modules/lib.h"
 
 static uint16_t * const VIDEO_MEMORY = (uint16_t *) 0xb8000;
-static const char * const symbols = "0123456789abcdef";
+static const char * const symbols = "0123456789ABCDEF";
 static uint32_t x = 0, y = 0;
 
 void clear(){

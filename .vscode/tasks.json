@@ -4,20 +4,11 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run OS",
+            "label": "Bash",
             "type": "shell",
-            "command": "make run",
+            "command": "outbash",
             "group": {
                 "kind": "test",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "Dissassemble Kernel.o",
-            "type": "shell",
-            "command": "objdump -d build/kernel.o",
-            "group": {
-                "kind": "build",
                 "isDefault": true
             }
         }

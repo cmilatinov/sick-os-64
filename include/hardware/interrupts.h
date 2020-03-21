@@ -131,8 +131,6 @@ extern "C" {
 
 }
 
-
-
 // Interrupt Manager class
 class InterruptManager {
 

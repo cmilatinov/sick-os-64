@@ -4,7 +4,7 @@ SRC = src
 
 CC = gcc
 SHARED_FLAGS = -I$(INCLUDE) -nostdinc -nostdlib  -g -Wall -Wextra 					\
-            -O3  -MMD -mno-red-zone -mcmodel=kernel 								\
+            -MMD -mno-red-zone -mcmodel=kernel 										\
 			-ffreestanding -fno-pie -fno-permissive -fno-exceptions -fno-rtti		\
 			-fno-builtin 															\
 			-Wno-unused-parameter
@@ -16,12 +16,14 @@ _OBJS = boot/boot.o 				\
 		kernel.o 					\
 		common/virtual.o 			\
 		modules/lib.o 				\
+		modules/memory.o			\
 		hardware/gdt.o 				\
 		hardware/ports.o 			\
 		hardware/interrupts.o 		\
 		hardware/interruptstubs.o 	\
 		drivers/keyboard.o			\
-		drivers/mouse.o				
+		drivers/mouse.o				\
+		drivers/vga.o
 
 LINK_OBJS = $(notdir $(_OBJS))
 OBJS = $(patsubst %, $(BUILD)/%, $(_OBJS))
@@ -65,7 +67,7 @@ run: clean kernel.iso
 	@echo "" 
 	@echo "Starting x86_64 emulator..."
 	@echo ""
-	@qemu-system-x86_64 -cdrom $(word 2, $^) -serial stdio -m 1024M
+	@wcmd qemu-system-x86_64 -cdrom $(word 2, $^) -serial stdio -m 1024M || qemu-system-x86_64 -cdrom $(word 2, $^) -serial stdio -m 1024M
 
 .PHONY: clean
 clean: 
