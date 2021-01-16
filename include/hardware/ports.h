@@ -5,14 +5,13 @@
 class Port8S {
 
     private:
-    uint16_t port;
+    const uint16_t port;
 
     public:
     Port8S(uint16_t port);
-    ~Port8S();
 
-    uint8_t Read();
-    void Write(uint8_t data);
+    uint8_t Read() const;
+    void Write(uint8_t data) const;
 
     static inline uint8_t Read(uint16_t port){
         uint8_t result;
@@ -42,14 +41,13 @@ class Port8S {
 class Port8 {
 
     private:
-    uint16_t port;
+    const uint16_t port;
 
     public:
     Port8(uint16_t port);
-    ~Port8();
 
-    uint8_t Read();
-    void Write(uint8_t data);
+    uint8_t Read() const;
+    void Write(uint8_t data) const;
 
     static inline uint8_t Read(uint16_t port){
         uint8_t result;
@@ -73,14 +71,13 @@ class Port8 {
 class Port16 {
 
     private:
-    uint16_t port;
+    const uint16_t port;
 
     public:
     Port16(uint16_t port);
-    ~Port16();
 
-    uint16_t Read();
-    void Write(uint16_t data);
+    uint16_t Read() const;
+    void Write(uint16_t data) const;
 
     static inline uint16_t Read(uint16_t port){
         uint16_t result;
@@ -104,16 +101,15 @@ class Port16 {
 class Port32 {
 
     private:
-    uint16_t port;
+    const uint16_t port;
 
     public:
     Port32(uint16_t port);
-    ~Port32();
 
-    uint32_t Read();
-    void Write(uint32_t data);
+    uint32_t Read() const;
+    void Write(uint32_t data) const;
 
-    static inline uint32_t Read(uint16_t port){
+    static inline uint32_t Read(uint16_t port) {
         uint32_t result;
         asm volatile(
             "inl %1, %k0"
@@ -122,7 +118,7 @@ class Port32 {
         return result;
     }
 
-    static inline void Write(uint16_t port, uint16_t data){
+    static inline void Write(uint16_t port, uint16_t data) {
         asm volatile( 
             "outl %k0, %1"
             :

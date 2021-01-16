@@ -1,28 +1,34 @@
 #pragma once
 
-#include "hardware/ports.h"
-#include "hardware/interrupts.h"
 #include "common/keycodes.h"
+
+#include "hardware/interrupts.h"
+#include "hardware/pci.h"
+#include "hardware/ports.h"
+
+#include "modules/drivers.h"
 
 #define KEYBOARD_DATA_PORT 0x60
 #define KEYBOARD_COMMAND_PORT 0x64
 
 // Keyboard Driver Class
-class KeyboardDriver : public InterruptHandler {
+class KeyboardDriver : public Driver, public InterruptHandler {
 
     private:
-    Port8 data;
-    Port8 command;
+    const Port8 data = Port8(KEYBOARD_DATA_PORT);
+    const Port8 command = Port8(KEYBOARD_COMMAND_PORT);
 
-    void (*keyUp)(char, uint8_t, uint8_t) = nullptr;
-    void (*keyDown)(char, uint8_t, uint8_t) = nullptr;
+    void (*keyUp)(char c, uint8_t key, uint8_t mods) = nullptr;
+    void (*keyDown)(char c, uint8_t key, uint8_t mods) = nullptr;
 
     public:
-    KeyboardDriver();
-    ~KeyboardDriver();
+    virtual const char * DisplayName() final { return "Generic Keyboard Driver"; };
 
-    virtual uint64_t HandleInterrupt(uint64_t rsp) final;
-    void Activate();
+    virtual void Load() final;  
+    virtual void Reset() final {}
+    virtual void Destroy() final {}
+
+    virtual void HandleInterrupt(uint8_t irq) final;
 
     void OnKeyDown(void (*keyDown)(char, uint8_t, uint8_t));
     void OnKeyUp(void (*keyUp)(char, uint8_t, uint8_t));

@@ -10,7 +10,7 @@ SECTIONS
         boot.o (.multiboot)
         boot.o (.text)
     }
-
+    
     .bootrodata :
     {
         boot.o (.rodata)
@@ -30,11 +30,10 @@ SECTIONS
     . = ALIGN(0x1000);
     _boot_end = .;
 
-    . += 0xFFFFFFFF80000000;
     _kernel_virtual_start = .;
+
     .text : AT(_boot_end)
-    {
-        *(.multiboot)
+    {   
         *(.text)
     }
 
@@ -44,18 +43,12 @@ SECTIONS
     {
         *(.rodata)
         *(.rodata.*)
-
     }
 
     . = ALIGN(0x1000);
 
     .data : AT ( (LOADADDR (.rodata) + SIZEOF (.rodata) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
     {
-        start_ctors = .;
-        KEEP(*(.init_array));
-        KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
-        end_ctors = .;
-
         *(.data)
         *(.eh_frame_hdr)
         *(.eh_frame)
@@ -69,9 +62,26 @@ SECTIONS
         *(.bss)
     }
 
+    /* Include the list of initialization functions sorted. */
+    .init_array :
+    {
+        crti.o(.init_array)
+        KEEP (*(SORT(EXCLUDE_FILE(crti.o crtn.o) .init_array.*)))
+        KEEP (*(EXCLUDE_FILE(crti.o crtn.o) .init_array))
+        crtn.o(.init_array)
+    }
+
+    /* Include the list of termination functions sorted. */
+    .fini_array :
+    {
+        crti.o(.fini_array)
+        KEEP (*(SORT(EXCLUDE_FILE(crti.o crtn.o) .fini_array.*)))
+        KEEP (*(EXCLUDE_FILE(crti.o crtn.o) .fini_array))
+        crtn.o(.fini_array)
+    }
+
     /DISCARD/ :
     {
-        *(.fini_array*)
         *(.comment)
     }
 

@@ -4,8 +4,6 @@
 
 #define MIN_CHUNK_SIZE 0
 
-
-
 class MemoryManager {
 
     private:
@@ -17,7 +15,7 @@ class MemoryManager {
             MemoryChunk * next;
             uint8_t allocated;
             size_t size;
-        }__attribute__((packed));
+        } PACKED;
         
         // Pointer to first memory chunk in heap
         MemoryChunk * first;
@@ -25,16 +23,21 @@ class MemoryManager {
         // Merge the target chunk with the one to its left
         inline void MergeLeft(MemoryChunk * toDelete);
 
-    public:
         // The active memory manager, used for memory allocation 
         // without needing a reference to the manager
         static MemoryManager * activeMemoryManager;
 
-        MemoryManager(void * heapStart, void * heapEnd);
+    public:
+        MemoryManager(void * heapStart, uint32_t heapSize);
         ~MemoryManager();
 
         void * malloc(size_t size);
         void free(void * ptr);
+
+        static bool IsMemoryManagerPresent();
+
+        friend void * ::malloc(size_t size);
+        friend void ::free(void * ptr);
 
 };
 
@@ -49,14 +52,16 @@ inline void free(void * ptr) {
         return MemoryManager::activeMemoryManager->free(ptr);
 }
 
-// void * operator new(unsigned size);
-// void * operator new[](unsigned size);
+void * operator new(long unsigned int size);
+void * operator new[](long unsigned int size);
 
-// void operator delete(void * ptr);
-// void operator delete[](void * ptr);
+void operator delete(void * ptr);
+void operator delete(void * ptr, long unsigned int size);
+void operator delete[](void * ptr);
+void operator delete[](void * ptr, long unsigned int size);
 
 void memcpy(const void * src, void * dest, size_t size);
 void memcpy_f(const void * src, void * dest, size_t size);
 
-void memset(void * dest, size_t size, uint8_t value);
+void * memset(void * dest, uint8_t src, size_t c);
 void memset_f(void * dest, size_t size, uint8_t value);

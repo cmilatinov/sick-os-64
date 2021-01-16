@@ -1,5 +1,11 @@
 
+.idea/
+
+.vscode/
+
 build/
+
+nul
 
 kernel.bin
 

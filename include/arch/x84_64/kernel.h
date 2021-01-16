@@ -3,7 +3,7 @@
 
 #include "cr.h"
 
-// Physical and virtual memory stack pointers.
+// Physical and virtual kernel start memory addresses.
 #define KERNEL_PHYSICAL_START 0x0000000000400000
 #define KERNEL_VIRTUAL_START  0xFFFFFFFF80400000
 
@@ -25,3 +25,7 @@
 #define KERNEL_BOOT_STACK_SIZE 0x4000
 #define KERNEL_BOOT_STACK_ALIGNMENT 0x1000
 #define KERNEL_HEAP_SIZE 1 << 24
+
+// Kernel paging
+#define KERNEL_PAGING_SIZE 0x200000
+#define KERNEL_PAGING_ALIGNMENT 0x200000

@@ -3,14 +3,14 @@
 
 MemoryManager * MemoryManager::activeMemoryManager = nullptr;
 
-MemoryManager::MemoryManager(void * heapStart, void * heapEnd) {
+MemoryManager::MemoryManager(void * heapStart, uint32_t heapSize) {
     
     // Create initial chunk
     first = reinterpret_cast<MemoryChunk*>(heapStart);
     first->prev = nullptr;
     first->next = nullptr;
     first->allocated = false;
-    first->size = reinterpret_cast<uint64_t>(heapEnd) - reinterpret_cast<uint64_t>(heapStart) - sizeof(MemoryChunk);
+    first->size = heapSize - sizeof(MemoryChunk);
     
     // Set this manager as the active manager
     activeMemoryManager = this;
@@ -23,6 +23,10 @@ MemoryManager::~MemoryManager() {
 }
 
 void * MemoryManager::malloc(size_t size) {
+
+    // Can't create empty memory chunks
+    if(!size)
+        return nullptr;
 
     MemoryChunk * mem = first;
     do {
@@ -51,6 +55,7 @@ void * MemoryManager::malloc(size_t size) {
                 // Resize this chunk and setup pointer to next chunk
                 mem->size = size;
                 mem->next = next;
+                mem->allocated = true;
 
             }
 
@@ -91,21 +96,33 @@ inline void MemoryManager::MergeLeft(MemoryChunk * toDelete) {
 
 }
 
-// void * operator new(unsigned size) {
-//     return malloc(size);
-// }
+bool MemoryManager::IsMemoryManagerPresent() {
+    return activeMemoryManager != nullptr;
+}
 
-// void * operator new[](unsigned size) {
-//     return malloc(size);
-// }
+void * operator new(long unsigned int size) {
+    return malloc(size);
+}
 
-// void operator delete(void * ptr) {
-//     return free(ptr);
-// }
+void * operator new[](long unsigned int size) {
+    return malloc(size);
+}
 
-// void operator delete[](void * ptr) {
-//     return free(ptr);
-// }
+void operator delete(void * ptr) {
+    free(ptr);
+}
+
+void operator delete(void * ptr, long unsigned int size) {
+    free(ptr);
+}
+
+void operator delete[](void * ptr) {
+    free(ptr);
+}
+
+void operator delete[](void * ptr, long unsigned int size) {
+    free(ptr);
+}
 
 void memcpy(const void * src, void * dest, size_t size) {
     
@@ -130,20 +147,22 @@ void memcpy_f(const void * src, void * dest, size_t size) {
         uint8_t * d = reinterpret_cast<uint8_t*>(destPtr) + size - (size & 0b111);
         const uint8_t * s = reinterpret_cast<const uint8_t*>(srcPtr) + size - (size & 0b111);
 
-        for(uint8_t i = 0; i < size & 0b111; i++)
+        for(uint8_t i = 0; i < (size & 0b111); i++)
             d[i] = s[i];
 
     }
 
 }
 
-void memset(void * dest, size_t size, uint8_t value) {
-
-    uint8_t * destPtr = reinterpret_cast<uint8_t*>(dest);
-    
-    for(size_t i = 0; i < size; i++)
-        destPtr[i] = value;
-
+void * memset(void * dest, uint8_t src, size_t c) {
+    void * temp = dest;
+    __asm__ volatile (
+        "rep stosb"
+        : "=D"(dest), "=c"(c)
+        : "0"(dest), "a"(src), "1"(c)
+        : "memory"
+    );
+    return temp;
 }
 
 void memset_f(void * dest, size_t size, uint8_t value) {

@@ -1,33 +1,44 @@
 #pragma once
 
 #include "arch/x84_64/kernel.h"
+#include "arch/x84_64/gdt.h"
+
 #include "common/types.h"
+
 #include "hardware/ports.h"
-#include "hardware/gdt.h"
 
-#define IDT_ENTRY_SIZE 16
-#define IDT_SIZE 256
+#define IDT_ENTRY_SIZE 	16
+#define IDT_SIZE 		256
 
-#define IDT_INTERRUPT_GATE 0xE
-#define IDT_TRAP_GATE 0xF
-#define IDT_CALL_GATE 0xC
+#define IDT_INTERRUPT_GATE 	0xE
+#define IDT_TRAP_GATE 		0xF
+#define IDT_CALL_GATE 		0xC
 
-#define IDT_STORAGE (1 << 4)
+#define IDT_STORAGE 	(1 << 4)
 
-#define IDT_PRIVILEGE0 (0x0 << 5)
-#define IDT_PRIVILEGE1 (0x1 << 5)
-#define IDT_PRIVILEGE2 (0x2 << 5)
-#define IDT_PRIVILEGE3 (0x3 << 5)
+#define IDT_PRIVILEGE0 	(0x0 << 5)
+#define IDT_PRIVILEGE1 	(0x1 << 5)
+#define IDT_PRIVILEGE2 	(0x2 << 5)
+#define IDT_PRIVILEGE3 	(0x3 << 5)
 
-#define IDT_PRESENT (1 << 7)
+#define IDT_PRESENT 	(1 << 7)
 
-#define PIC1_COMMAND_PORT 0x20
-#define PIC1_DATA_PORT 0x21
+#define PIC1_COMMAND_PORT 	0x20
+#define PIC1_DATA_PORT 		0x21
 
-#define PIC2_COMMAND_PORT 0xA0
-#define PIC2_DATA_PORT 0xA1
+#define PIC2_COMMAND_PORT   0xA0
+#define PIC2_DATA_PORT      0xA1
 
-#define IRQ_OFFSET_X86_64 0x20
+#define NUM_EXCEPTION_VECTORS   0x20
+#define IRQ_OFFSET_X86_64       NUM_EXCEPTION_VECTORS
+
+#define IRQ_TIMER           0x00
+#define IRQ_KEYBOARD        0x01
+#define IRQ_MOUSE           0x0C
+
+#define IRQ_OK                  0
+#define IRQ_NOT_INITIALIZED     1
+#define IRQ_IN_USE              2
 
 // Interrupt Descriptor Table Class
 class IDT {
@@ -61,21 +72,17 @@ class IDT {
         public:
         GateDescriptor();
         GateDescriptor(uint64_t base, uint16_t selector, uint8_t typeAttr);
-        ~GateDescriptor();
 
         uint64_t Base();
         uint16_t Selector();
         uint8_t TypeAttributes();
 
-    } __attribute__((packed));
+    } PACKED;
 
     private:
     GateDescriptor table[IDT_SIZE];
 
     public:
-    IDT();
-    ~IDT();
-    
     void SetEntry(uint8_t index, void (* handler)(), uint16_t selector, uint8_t typeAttr);
     GateDescriptor * GetEntry(uint8_t index);
     void LoadIDT();
@@ -84,14 +91,18 @@ class IDT {
 
 // Interrupt Handler Class
 class InterruptHandler {
-    
+
     public:
-    InterruptHandler();
-    ~InterruptHandler();
-    
-    virtual uint64_t HandleInterrupt(uint64_t rsp) = 0;
+    virtual void HandleInterrupt(uint8_t vector) = 0;
 
 };
+
+// Register data saved when an interrupt occurs
+struct InterruptContext {
+    uint64_t rax, rbx, rcx, rdx, rbp, rsp, rsi, rdi;
+    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
+    uint64_t rip, cs, rflags;
+} PACKED;
 
 // Assembly definitions
 extern "C" {
@@ -129,6 +140,10 @@ extern "C" {
     void HandleException0x12();
     void HandleException0x13();
 
+    // Save and restore contexts
+    uint32_t SaveContext(InterruptContext * ctx);
+    void RestoreContext(InterruptContext * ctx);
+
 }
 
 // Interrupt Manager class
@@ -147,32 +162,47 @@ class InterruptManager {
     InterruptHandler * handlers[IDT_SIZE];
 
     // Programmable Interrupt Controller Ports
-    Port8S picMasterCommandPort;
-    Port8S picMasterDataPort;
-    Port8S picSlaveCommandPort;
-    Port8S picSlaveDataPort;
-
-    // IRQ Interrupts Offset
-    uint64_t hardwareInterruptOffset;
+    const Port8S picMasterCommandPort = Port8S(PIC1_COMMAND_PORT);
+    const Port8S picMasterDataPort = Port8S(PIC1_DATA_PORT);
+    const Port8S picSlaveCommandPort = Port8S(PIC2_COMMAND_PORT);
+    const Port8S picSlaveDataPort = Port8S(PIC2_DATA_PORT);
 
     // GDT Code Segment Index
     uint32_t codeSegment;
 
+    // Instance based interrupt handler
+    uint64_t HandleInterrupt(uint64_t rsp, uint8_t interruptNumber);
+
+    // Request to set an IRQ handler
+    uint32_t AssignIRQ(uint8_t irq, InterruptHandler * handler);
+
     public:
-    InterruptManager(uint64_t hardwareOffset);
+    InterruptManager();
     ~InterruptManager();
 
     // Turn an interrupt manager on or off
     void Activate();
     void Deactivate();
 
-    // Set handler
-    void SetInterruptHandler(uint8_t interruptNumber, InterruptHandler * handler);
-
-    // Instance based interrupt handler.
-    uint64_t HandleInterrupt(uint64_t rsp, uint8_t interruptNumber);
-
-    // Make interrupt handler friend so it can access the active interrupt manager.
+    // Make interrupt handler friend so it can access the active interrupt manager
     friend uint64_t ::HandleInterrupt(uint64_t rsp, uint8_t interruptNumber);
 
+    static uint32_t RequestIRQ(uint8_t irq, InterruptHandler * handler);
+    static void SetMask(uint8_t irq, bool enable);
+
 };
+
+namespace Interrupts {
+
+    inline uint32_t SaveContext(InterruptContext * ctx) {
+        return ::SaveContext(ctx);
+    }
+    inline void RestoreContext(InterruptContext * ctx) {
+        ::RestoreContext(ctx);
+    }
+
+    inline void Halt() {
+        asm volatile ("hlt");
+    }
+
+}

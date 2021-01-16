@@ -6,11 +6,12 @@
         {
             "label": "Bash",
             "type": "shell",
-            "command": "outbash",
+            "command": "make run",
             "group": {
-                "kind": "test",
+                "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         }
     ]
 }

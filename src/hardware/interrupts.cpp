@@ -18,8 +18,6 @@ IDT::GateDescriptor::GateDescriptor(uint64_t base, uint16_t selector, uint8_t ty
     this->hBase = (base >> 32) & 0xFFFFFFFF;
 }
 
-IDT::GateDescriptor::~GateDescriptor(){}
-
 uint64_t IDT::GateDescriptor::Base(){
     uint64_t result = static_cast<uint64_t>(hBase) << 32;
     result |= mBase << 16;
@@ -34,9 +32,6 @@ uint16_t IDT::GateDescriptor::Selector(){
 uint8_t IDT::GateDescriptor::TypeAttributes(){
     return typeAttr;
 }
-
-IDT::IDT(){}
-IDT::~IDT(){};
 
 void IDT::SetEntry(uint8_t index, void (* handler)(), uint16_t selector, uint8_t typeAttr){
     table[index] = GateDescriptor(reinterpret_cast<uint64_t>(handler), selector, IDT_PRESENT | typeAttr);
@@ -66,20 +61,14 @@ void IDT::LoadIDT(){
 
 }
 
-InterruptHandler::InterruptHandler(){}
-InterruptHandler::~InterruptHandler(){}
-
-
 InterruptManager * InterruptManager::activeManager = 0;
 
-InterruptManager::InterruptManager(uint64_t hardwareInterruptOffset) :
+InterruptManager::InterruptManager() :
     picMasterCommandPort(PIC1_COMMAND_PORT),
     picMasterDataPort(PIC1_DATA_PORT),
     picSlaveCommandPort(PIC2_COMMAND_PORT),
     picSlaveDataPort(PIC2_DATA_PORT)
 {
-
-    this->hardwareInterruptOffset = hardwareInterruptOffset;
     this->codeSegment = KERNEL_GDT_ENTRY * GDT_ENTRY_SIZE;
 
     for(uint32_t i = 0; i < IDT_SIZE; i++){
@@ -109,21 +98,21 @@ InterruptManager::InterruptManager(uint64_t hardwareInterruptOffset) :
     idt.SetEntry(0x13, &HandleException0x13, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
 
     // Timer IRQ
-    idt.SetEntry(hardwareInterruptOffset, &HandleInterruptRequest0x00, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(IRQ_OFFSET_X86_64 + IRQ_TIMER, &HandleInterruptRequest0x00, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
     
     // Keyboard IRQ
-    idt.SetEntry(hardwareInterruptOffset + 0x01, &HandleInterruptRequest0x01, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(IRQ_OFFSET_X86_64 + IRQ_KEYBOARD, &HandleInterruptRequest0x01, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
     
     // Mouse IRQ
-    idt.SetEntry(hardwareInterruptOffset + 0x0C, &HandleInterruptRequest0x0C, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
+    idt.SetEntry(IRQ_OFFSET_X86_64 + IRQ_MOUSE, &HandleInterruptRequest0x0C, codeSegment, IDT_PRIVILEGE0 | IDT_INTERRUPT_GATE);
 
     // Restart PICs.
     picMasterCommandPort.Write(0x11);
     picSlaveCommandPort.Write(0x11);
 
     // Remap PICs to proper interrupt vector offsets.
-    picMasterDataPort.Write(hardwareInterruptOffset);
-    picSlaveDataPort.Write(hardwareInterruptOffset + 8);
+    picMasterDataPort.Write(IRQ_OFFSET_X86_64);
+    picSlaveDataPort.Write(IRQ_OFFSET_X86_64 + 8);
 
     picMasterDataPort.Write(0x04);
     picSlaveDataPort.Write(0x02);
@@ -156,13 +145,47 @@ void InterruptManager::Deactivate(){
     }
 }
 
-void InterruptManager::SetInterruptHandler(uint8_t interruptNumber, InterruptHandler * handler){
-    handlers[interruptNumber] = handler;
+uint32_t InterruptManager::AssignIRQ(uint8_t irq, InterruptHandler * handler){
+    if (handlers[IRQ_OFFSET_X86_64 + irq] == nullptr) {
+        handlers[IRQ_OFFSET_X86_64 + irq] = handler;
+        return IRQ_OK;
+    }
+    return IRQ_IN_USE;
+}
+
+uint32_t InterruptManager::RequestIRQ(uint8_t irq, InterruptHandler * handler) {
+    if (activeManager != nullptr)
+        return activeManager->AssignIRQ(irq, handler);
+
+    return IRQ_NOT_INITIALIZED;
+}
+
+void InterruptManager::SetMask(uint8_t irq, bool enable) {
+    
+    uint8_t port, bit, mask;
+    if (irq >= 8) {
+        bit = 1 << (irq - 8);
+        port = PIC2_DATA_PORT;
+    } else {
+        bit = 1 << irq;
+        port = PIC1_DATA_PORT;
+    }
+
+    mask = Port8::Read(port);
+
+    /* A '1' bit in the mask inhibits the interrupt. */
+    if (enable)
+        mask &= ~bit;
+    else
+        mask |= bit;
+
+    Port8::Write(port, mask);
+    
 }
 
 // Single Interrupt Handler
 extern "C" uint64_t HandleInterrupt(uint64_t rsp, uint8_t interruptNumber){
-    if(InterruptManager::activeManager != nullptr)
+    if (InterruptManager::activeManager != nullptr)
         return InterruptManager::activeManager->HandleInterrupt(rsp, interruptNumber);
     return rsp;
 }
@@ -170,15 +193,14 @@ extern "C" uint64_t HandleInterrupt(uint64_t rsp, uint8_t interruptNumber){
 uint64_t InterruptManager::HandleInterrupt(uint64_t rsp, uint8_t interruptNumber){
 
     // If this interrupt has a handler, handle it.
-    if(handlers[interruptNumber] != nullptr){
-        rsp = handlers[interruptNumber]->HandleInterrupt(rsp);
-    }
+    if (handlers[interruptNumber] != nullptr)
+        handlers[interruptNumber]->HandleInterrupt(interruptNumber);
 
     // Acknowledge hardware interrupts.
-    if(interruptNumber >= hardwareInterruptOffset && interruptNumber < hardwareInterruptOffset + 0x10){
+    if (interruptNumber >= IRQ_OFFSET_X86_64 && interruptNumber < IRQ_OFFSET_X86_64 + 0x10) {
         picMasterCommandPort.Write(0x20);
         
-        if(hardwareInterruptOffset + 8 <= interruptNumber)
+        if(IRQ_OFFSET_X86_64 + 8 <= interruptNumber)
             picSlaveCommandPort.Write(0x20);
             
     }

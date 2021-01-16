@@ -14,16 +14,40 @@
 #define TWO_MEGABYTES_SHIFT 21
 #define TWO_MEGABYTES (1 << TWO_MEGABYTES_SHIFT)
 
-// Multiboot Variables
-.set MAGIC, 0x1badb002
-.set FLAGS, (1 << 0 | 1 << 1)
-.set CHECKSUM, -(MAGIC + FLAGS)
-
 // Multiboot Header
 .section .multiboot
-	.long MAGIC
-	.long FLAGS
-	.long CHECKSUM
+header_start:
+    
+    // Multiboot2 magic number
+	.long 0xe85250d6
+
+    // Architecture
+    // 0 = i386
+    .long 0
+
+    // Header length
+	.long header_end - header_start
+
+    // Checksum
+	.long 0x100000000 - (0xe85250d6 + 0 + (header_end - header_start))
+
+    // Framebuffer tag
+    //.align 8
+    //.short 5            // Type
+    //.short 0            // Flags
+    //.long 20            // Size
+    //.long 1280          // Width
+    //.long 720           // Height
+    //.long 32            // Depth (0 for text mode)
+
+    // End tag
+    .align 8
+    .short 0
+    .short 0
+    .short 8
+
+header_end:
+
 
 .code32
 
@@ -39,6 +63,9 @@
 // High and Low Page Directory Tables
 .comm low_page_directory_table, PAGE_DIRECTORY_SIZE, PAGE_DIRECTORY_ALIGNMENT
 .comm high_page_directory_table, PAGE_DIRECTORY_SIZE, PAGE_DIRECTORY_ALIGNMENT
+
+// More page table space
+.comm paging_space, KERNEL_PAGING_SIZE, KERNEL_PAGING_ALIGNMENT
 
 // Temporary Stack
 .comm tmp_stack, KERNEL_BOOT_STACK_SIZE, KERNEL_BOOT_STACK_ALIGNMENT
@@ -160,7 +187,7 @@ page_directory_table_loop:
 
 _start64:
 
-    // Set segment selectors to the kernel descriptor.
+    // Set segment selectors
     mov $0, %ax
     movw %ax, %ds
     movw %ax, %es
@@ -168,13 +195,25 @@ _start64:
     movw %ax, %gs
     movw %ax, %ss
 
-    // Pass multiboot pointer to C++ entry point.
-    movq $_kernel_virtual_end, %rdi
-    addq $0xFFF, %rdi
-    andq $0xFFFFFFFFFFFFF000, %rdi
+    // Call Global Constructors
+    call _init
+
+    // Pass multiboot pointer, and heap start pointer to C++ entry point.
+    pop %rdi
+
+    // Pass paging space pointer
+    movq $paging_space, %rsi
+
+    // Pass heap start pointer
+    movq $_kernel_virtual_end, %rdx
+    addq $0xFFF, %rdx
+    andq $0xFFFFFFFFFFFFF000, %rdx
 
     // Call C++ entry point.
     call kernelMain
+
+    // Call Global Destructors
+    call _fini
 
 end_loop:
 

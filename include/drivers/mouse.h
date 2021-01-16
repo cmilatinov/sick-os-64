@@ -1,8 +1,13 @@
 #pragma once
 
-#include "hardware/ports.h"
-#include "hardware/interrupts.h"
 #include "common/keycodes.h"
+
+#include "hardware/interrupts.h"
+#include "hardware/pci.h"
+#include "hardware/ports.h"
+
+#include "modules/drivers.h"
+
 
 #define MOUSE_DATA_PORT     0x60
 #define MOUSE_COMMAND_PORT  0x64
@@ -21,11 +26,11 @@
 #define MOUSE_BTN_LEFT      0b00000001
 
 // Keyboard Driver Class
-class MouseDriver : public InterruptHandler {
+class MouseDriver : public Driver, public InterruptHandler {
 
     private:
-    Port8 data;
-    Port8 command;
+    const Port8 data = Port8(MOUSE_DATA_PORT);
+    const Port8 command = Port8(MOUSE_COMMAND_PORT);
 
     uint8_t buffer[MOUSE_BUFFER_SIZE];
     uint8_t offset = 0;
@@ -37,11 +42,13 @@ class MouseDriver : public InterruptHandler {
     void (*mouseMove) (int32_t dx, int32_t dy);
 
     public:
-    MouseDriver();
-    ~MouseDriver();
+    virtual const char * DisplayName() final { return "Generic Mouse Driver"; };
 
-    virtual uint64_t HandleInterrupt(uint64_t rsp) final;
-    void Activate();
+    virtual void Load() final;
+    virtual void Reset() final {}
+    virtual void Destroy() final {}
+
+    virtual void HandleInterrupt(uint8_t irq) final;
 
     void OnMouseButtonDown(void (*mouseButtonDown) (uint8_t button));
     void OnMouseButtonUp(void (*mouseButtonUp) (uint8_t button));

@@ -1,14 +1,36 @@
 #include "drivers/keyboard.h"
 #include "modules/lib.h"
 
-KeyboardDriver::KeyboardDriver(): 
-    data(KEYBOARD_DATA_PORT),
-    command(KEYBOARD_COMMAND_PORT) 
-{}
+void KeyboardDriver::Load() {
 
-KeyboardDriver::~KeyboardDriver() {}
+    // Read any data needed to be read
+    // Bit 0 = There is data on port 0x60
+    while(command.Read() & 0x1) 
+        data.Read();
 
-uint64_t KeyboardDriver::HandleInterrupt(uint64_t rsp) {
+    // Controller Command 0xAE = Enable keyboard
+    command.Write(0xAE); 
+    
+    // Controller Command 0x20 = Read controller command byte
+    command.Write(0x20); 
+
+    // Set controller command bit 0 and disable bit 3
+    // Bit 0 = Keyboard interrupt enable
+    // Bit 3 = Ignore keyboard lock
+    uint8_t status = (data.Read() | 1) & ~0x10; 
+    
+    // Controller Command 0x60 = Write controller command byte
+    command.Write(0x60); 
+
+    // Write the command byte to data port
+    data.Write(status); 
+
+    InterruptManager::RequestIRQ(IRQ_KEYBOARD, this);
+
+}
+
+
+void KeyboardDriver::HandleInterrupt(uint8_t irq) {
 
     static uint8_t escape = 0;
     static uint8_t ctrl = 0;
@@ -71,6 +93,7 @@ uint64_t KeyboardDriver::HandleInterrupt(uint64_t rsp) {
             case SC_T: handler(shift ? 'T' : 't', VK_T, mods); break;
             case SC_U: handler(shift ? 'U' : 'u', VK_U, mods); break;
             case SC_V: handler(shift ? 'V' : 'v', VK_V, mods); break;
+            case SC_W: handler(shift ? 'W' : 'w', VK_W, mods); break;
             case SC_X: handler(shift ? 'X' : 'x', VK_X, mods); break;
             case SC_Y: handler(shift ? 'Y' : 'y', VK_Y, mods); break;
             case SC_Z: handler(shift ? 'Z' : 'z', VK_Z, mods); break;
@@ -134,34 +157,6 @@ uint64_t KeyboardDriver::HandleInterrupt(uint64_t rsp) {
         }
         escape = 0;
     }
-
-    return rsp;
-
-}
-
-void KeyboardDriver::Activate() {
-
-    // Read any data needed to be read
-    // Bit 0 = There is data on port 0x60
-    while(command.Read() & 0x1) 
-        data.Read();
-
-    // Controller Command 0xAE = Enable keyboard
-    command.Write(0xAE); 
-    
-    // Controller Command 0x20 = Read controller command byte
-    command.Write(0x20); 
-
-    // Set controller command bit 0 and disable bit 3
-    // Bit 0 = Keyboard interrupt enable
-    // Bit 3 = Ignore keyboard lock
-    uint8_t status = (data.Read() | 1) & ~0x10; 
-    
-    // Controller Command 0x60 = Write controller command byte
-    command.Write(0x60); 
-
-    // Write the command byte to data port
-    data.Write(status); 
 
 }
 

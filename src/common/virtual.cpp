@@ -1,3 +1,5 @@
 #include "common/virtual.h"
 
-extern "C" void __cxa_pure_virtual() {};
+extern "C" void __cxa_pure_virtual() {
+    while (1);
+};

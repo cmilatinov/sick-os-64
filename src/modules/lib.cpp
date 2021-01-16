@@ -1,5 +1,8 @@
 #include "modules/lib.h"
 
+#define SCREEN_WIDTH  80
+#define SCREEN_HEIGHT 25
+
 static uint16_t * const VIDEO_MEMORY = (uint16_t *) 0xb8000;
 static const char * const symbols = "0123456789ABCDEF";
 static uint32_t x = 0, y = 0;
@@ -12,6 +15,19 @@ void clear(){
 	
 	// Reset the cursor.
 	x = y = 0;
+}
+
+void erase(uint32_t numSpaces) {
+	for (uint32_t i = 0; i < numSpaces; i++) {
+		if (x == 0 && y == 0)
+			return;
+		else if (x == 0) {
+			x = SCREEN_WIDTH - 1;
+			y--;
+		} else 
+			x--;
+		VIDEO_MEMORY[(SCREEN_WIDTH * y) + x] = (VIDEO_MEMORY[(SCREEN_WIDTH * y) + x] & 0xFF00) | ' ';
+	}
 }
 
 void printf(){
@@ -29,18 +45,18 @@ void printf(const char * str){
 			y++;
 		// Otherwise, print the character and increment x.
 		}else{
-			VIDEO_MEMORY[(80 * y) + x] = (VIDEO_MEMORY[(80 * y) + x] & 0xFF00) | str[i];
+			VIDEO_MEMORY[(SCREEN_WIDTH * y) + x] = (VIDEO_MEMORY[(SCREEN_WIDTH * y) + x] & 0xFF00) | str[i];
 			x++;
         }
 
 		// If we've reached the end of the line, move to the next one.
-        if(x >= 80){
+        if(x >= SCREEN_WIDTH){
             x = 0;
             y++;
         }
 		
 		// If we've reached the end of the screen, clear it.
-        if(y >= 25)
+        if(y >= SCREEN_HEIGHT)
 			clear();
     }
 
@@ -107,4 +123,22 @@ void printp(void * ptr){
 
 	// Print the pointer in hex.
 	printh(reinterpret_cast<uint64_t>(ptr));
+}
+
+void hexdump(void * loc, size_t size) {
+	clear();
+
+	uint8_t * ptr = reinterpret_cast<uint8_t*>(loc);
+
+	for (size_t i = 0; i < size; i++) {
+		if (ptr[i] < 0x10) {
+			printf("0");
+			printb(ptr[i], 16);
+		} else
+			printb(ptr[i], 16);
+		
+		if (i % 27 != 26)
+			printf(" ");
+	}
+	
 }
